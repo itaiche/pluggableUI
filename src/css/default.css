@@ -13,3 +13,17 @@ button {
     background-color: transparent;
     border: solid 2px black;
 }
+
+iframe {
+    width: 130px;
+    height: 130px;
+    border: none;
+}
+
+#owlImg {
+    width: 500px;
+    top:40px;
+    position: fixed;
+    right:50%;
+    margin-right:-250px;
+}

@@ -25,7 +25,7 @@
         this.className = originalClass;
         animationsCompleted++;
         if(animationsCompleted >= totalElements){
-            //TODO: publish completion
+
         }
     }
 

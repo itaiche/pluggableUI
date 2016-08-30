@@ -1,6 +1,6 @@
 (function () {
 
-    let shapeCount = 200;
+    let shapeCount = 300;
     let viewPort = {
         height: Window.innerHeight,
         width: window.innerWidth
