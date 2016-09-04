@@ -5,6 +5,8 @@
     background-color: lightseagreen;
     position: relative;
     border: solid 1px lightblue;
+    line-height: 50px;
+    font-size: 0.8em;
 }
 
 .rectangle {
@@ -12,6 +14,7 @@
     height: 50px;
     border:solid 1px red;
     background-color: pink;
+    line-height: 50px;
 }
 
 .plate.ball {
@@ -24,6 +27,8 @@
     width: 35px;
     height: 35px;
     background-color: lightcyan;
+    font-size: 0.5em;
+    line-height: 35px;
 }
 
 .triangle {
@@ -47,4 +52,9 @@
     border-bottom-color:darkseagreen;
     border-bottom-width:98px;
     border-left-width: 0;
+}
+.funkster {
+    color: white;
+    font-weight: bold;
+    font-size: 1.5em;
 }

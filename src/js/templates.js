@@ -1,6 +1,6 @@
 (function(){
     var templates = {},
-        known = ["ball", "plate", "rectangle", "triangle"];
+        known = ["ball", "plate", "rectangle", "triangle", "funkster"];
 
 
     function _init() {
@@ -30,6 +30,9 @@
             if(styles.hasOwnProperty(key)) {
                 span.style[key] = styles[key];
             }
+        }
+        if(options.className){
+            span.className = options.className;
         }
         span.innerHTML = templates[name];
         return span;

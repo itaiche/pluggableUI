@@ -2,16 +2,27 @@
     padding: 0;
     margin: 0;
     font-size: 1em;
-    font-family: Courier;
+    font-family: "Courier New";
+    text-align: center;
+}
+
+
+html {
+    background-color: black;
+    overflow: hidden;
 }
 
 button {
-    margin: 5px;
+    position: fixed;
+    top: 5px;
+    left: 5px;
     padding: 5px;
     border-radius: 10px;
     cursor: pointer;
-    background-color: transparent;
+    background-color: white;
     border: solid 2px black;
+    z-index: 100;
+    outline: none;
 }
 
 iframe {
@@ -26,4 +37,44 @@ iframe {
     position: fixed;
     right:50%;
     margin-right:-250px;
+}
+
+.rotate7 {
+    transform:rotate(7deg);
+}
+
+.rotate15 {
+    transform:rotate(15deg);
+}
+
+.rotate30 {
+    transform:rotate(30deg);
+}
+
+.rotate50 {
+    transform:rotate(50deg);
+}
+
+.rotate70 {
+    transform:rotate(70deg);
+}
+
+.rotate100 {
+    transform:rotate(100deg);
+}
+
+.rotate125 {
+    transform:rotate(125deg);
+}
+
+.rotate147 {
+    transform:rotate(147deg);
+}
+
+.rotate159 {
+    transform:rotate(159deg);
+}
+
+.rotate175 {
+    transform:rotate(175deg);
 }

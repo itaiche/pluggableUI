@@ -4,7 +4,7 @@
   "author" : "itai.che@gmail.com",
   "keywords": [""],
   "dependencies": {
-      "chronosjs" : "latest"
+      "chronosjs" : "0.0.20"
   },
   "engines": {
 
