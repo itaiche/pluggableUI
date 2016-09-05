@@ -11,7 +11,7 @@ A small wacky demo of simple Client APIs and how to use Events to share data.
 3. The event propagates to the iFrames with a random chosen animal
 4. That animal plays a sound and changes his background color to Fuchsia
  
- The demo relies on [Liveperson Chronos JS](https://github.com/LivePersonInc/chronosjs) for all events.
+The demo relies on [Liveperson Chronos JS](https://github.com/LivePersonInc/chronosjs) for all events.
  
 #Credits
 For the great images:
