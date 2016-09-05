@@ -1,16 +1,16 @@
-(function(){
+(function () {
 
-    let files = [];
-    let currentIndex = 0;
-    let audioElement;
+    let files = [],
+        currentIndex = 0,
+        audioElement;
 
-    if(document.readystate === "loaded"){
+    if (document.readystate === "loaded") {
         _createAudioPlayer();
-    }else{
+    } else {
         window.addEventListener("load", _createAudioPlayer, false);
     }
 
-    function _createAudioPlayer(){
+    function _createAudioPlayer() {
         audioElement = document.createElement("AUDIO");
         audioElement.style.position = "absolute";
         audioElement.style.top = "-1000px";
@@ -22,14 +22,13 @@
         document.body.appendChild(audioElement);
     }
 
-    function configure(options){
-        if(options && options.files && options.files.constructor === Array){
+    function configure(options) {
+        if (options && options.files && options.files.constructor === Array) {
             files = JSON.parse(JSON.stringify(options.files));
         }
     }
 
     function play(fileName) {
-        var hasFile = false;
         var finalFile;
         if (fileName && files.indexOf(fileName) > -1) {
             finalFile = fileName;
@@ -48,8 +47,8 @@
         }
     }
 
-    function stop(){
-        if(audioElement){
+    function stop() {
+        if (audioElement) {
             audioElement.pause();
         }
     }
