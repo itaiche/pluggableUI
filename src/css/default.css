@@ -29,6 +29,7 @@ iframe {
     width: 130px;
     height: 130px;
     border: none;
+    overflow: hidden;
 }
 
 #owlImg {

@@ -13,10 +13,11 @@
 
     function createElements(count) {
         for (var i = 0; i < (count || shapeCount); i++) {
-            let type = templates.keys[Math.floor(Math.random() * templates.keys.length)];
+            let type = getRandomFromArray(templates.keys);
             let left = Math.floor((viewPort.width || deviceScreen.width) * Math.random());
             left = left < 0 ? 0 : left;
             let top = Math.floor((viewPort.height || deviceScreen.height) * Math.random());
+
             document.body.appendChild(templates.generate(type, {
                 wrapper: "span",
                 styles: {
@@ -24,7 +25,7 @@
                     top: top + "px",
                     left: left + "px"
                 },
-                className: rotateClasses[Math.floor(Math.random() * rotateClasses.length)]
+                className: getRandomFromArray(rotateClasses)
             }));
         }
     }

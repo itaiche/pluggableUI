@@ -1,12 +1,16 @@
-pluggableUI Demo
-------------------
+Pluggable /Extendable UI Demo
+------------------------------
 
 ##Overview
 
-A small demo project to demonstrate how we can use the UI data to help our users.
+A small wacky demo of simple Client APIs and how to use Events to share data.   
+ 
  
  
  
 #Credits
-For the great images:  
-[https://clipartix.com](https://clipartix.com)
+For the great images:
+[Clipartix](https://clipartix.com)  
+
+For amazing animations:
+[Daniel Eden (danden)](https://github.com/daneden/animate.css)

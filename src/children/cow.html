@@ -3,12 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <script>
-        window.files = [ "sounds/crab1.mp3"];
+        window.files = [ "sounds/cow1.wav", "sounds/cow2.wav", "sounds/cow3.wav"];
+        window.myType = "cow";
     </script>
-    <!--<script type="application/javascript" src="../../node_modules/chronosjs/dist/PostMessageCourier.js"></script>-->
-    <script type="application/javascript" src="http://itaicmac.dev.lprnd.net/chronosjs/dist/PostMessageCourier.js"></script>
+    <script type="application/javascript" src="../../node_modules/chronosjs/dist/PostMessageCourier.js"></script>
+    <script type="application/javascript" src="../js/utils.js"></script>
     <script type="application/javascript" src="js/audioPlayer.js"></script>
     <script type="application/javascript" src="js/setup.js"></script>
+    <script type="application/javascript">
+        courier.bind({
+            eventName: "animationComplete",
+            appName: "animator",
+            func: function (data) {
+                if(data.cow){
+                    audioPlayer.play();
+                }
+            }
+        });
+    </script>
     <title>Cow</title>
 </head>
 <body>

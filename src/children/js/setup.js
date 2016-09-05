@@ -1,3 +1,5 @@
+
+
 console.log("I am " +  window.location.href);
 audioPlayer.configure({
     files : window.files
@@ -17,11 +19,16 @@ function bindMe() {
     courier.bind({
         eventName: "animationComplete",
         appName: "animator",
-        func: function () {
-            console.log("triggered in iFrame");
+        func: function (data) {
             var colors = ["transparent", "green", "red", "blue", "pink", "purple"];
-            document.body.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-            audioPlayer.play();
+            var color = getRandomFromArray(colors);
+            if(data[window.myType]){
+                audioPlayer.play();
+                color = "fuchsia";
+            }
+            console.log("triggered in iFrame");
+            document.body.style.backgroundColor = color;
+
         }
     });
     console.log("Bound to courier " + window.location.href)

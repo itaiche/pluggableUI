@@ -9,6 +9,7 @@
             elements = document.querySelectorAll(options.selector);
 
         var length = elements.length;
+
         elements.forEach(function(element){
             let classes = element.className.split(" ");
             let resClass = "";
@@ -26,13 +27,17 @@
             this.className = originalClass;
             animationsCompleted++;
             if(!eventTriggered && animationsCompleted >= totalElements){
+                var eventData = {
+                    elementCount : totalElements,
+                    animated: options.animation.className
+                };
+                var additionalKey = getRandomFromArray([ "cow" , "sheep" , "crab"]);
+                eventData[additionalKey] = true;
+
                 window.channels.trigger({
                     eventName: "animationComplete",
                     appName: "animator",
-                    data: {
-                        elementCount : totalElements,
-                        animated: options.animation.className
-                    }
+                    data: eventData
                 });
                 eventTriggered = true;
             }

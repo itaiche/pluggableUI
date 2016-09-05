@@ -50,7 +50,7 @@
 
     function stop(){
         if(audioElement){
-            audioElement.stop();
+            audioElement.pause();
         }
     }
 
