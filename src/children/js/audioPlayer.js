@@ -47,16 +47,9 @@
         }
     }
 
-    function stop() {
-        if (audioElement) {
-            audioElement.pause();
-        }
-    }
-
     window.audioPlayer = {
         configure: configure,
-        play: play,
-        stop: stop
+        play: play
     };
 })();
 
