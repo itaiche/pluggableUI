@@ -19,7 +19,7 @@ The demo relies on [Liveperson Chronos JS](https://github.com/LivePersonInc/chro
  
 #Credits
 For the great images:
-[Clipartix](https://clipartix.com)  
+[Clipartix](http://clipartix.com)  
 
 For the amazing animations:
 [Daniel Eden (danden)](https://github.com/daneden/animate.css)
