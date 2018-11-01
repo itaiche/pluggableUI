@@ -28,7 +28,7 @@
     }
   });
 
-  function animate(){
+  function animate() {
     const elementsSelection = ["iframe", "img"].concat(templates.keys).concat(randomizer.rotationClasses.slice(1));
     const animationType = getRandomFromArray(animationAPI.classes);
     let elementsType = getRandomFromArray(elementsSelection);
@@ -39,10 +39,10 @@
     animationAPI.animate({selector: elementsType, animation: {className: animationType}});
   }
 
-  function animateConstantly(){
-    if(window.state.insane){
-        animate();
-        setTimeout(animateConstantly, 200);
+  function animateConstantly() {
+    if (window.state.insane) {
+      animate();
+      setTimeout(animateConstantly, 200);
     }
   }
 
