@@ -1,35 +1,34 @@
-
-
-console.log("I am " +  window.location.href);
 audioPlayer.configure({
-    files : window.files
+  files: window.files,
+  onEnd: function () {
+    changeBodyColor(generateColor(true));
+  }
 });
 
-var courier = new Chronos.PostMessageCourier({
-    onready: {
-        callback: function(){
-            bindMe();
-            console.log('IFrame ready....')
-        }
+const courier = new Chronos.PostMessageCourier({
+  onready: {
+    callback: function () {
+      bindMe();
     }
+  }
 });
-console.log("Created courier " + window.location.href)
 
 function bindMe() {
-    courier.bind({
-        eventName: "animationComplete",
-        appName: "animator",
-        func: function (data) {
-            var colors = ["transparent", "green", "red", "blue", "pink", "purple"];
-            var color = getRandomFromArray(colors);
-            if(data[window.myType]){
-                audioPlayer.play();
-                color = "fuchsia";
-            }
-            console.log("triggered in iFrame");
-            document.body.style.backgroundColor = color;
+  courier.bind({
+    eventName: "animationComplete",
+    appName: "animator",
+    func: function (data) {
+      audioPlayer.pause();
+      let color = generateColor(true);
+      if (data[window.myType]) {
+        audioPlayer.play();
+        color = "fuchsia";
+      }
+      changeBodyColor(color);
+    }
+  });
+}
 
-        }
-    });
-    console.log("Bound to courier " + window.location.href)
+function changeBodyColor(color) {
+  document.body.style.backgroundColor = color;
 }

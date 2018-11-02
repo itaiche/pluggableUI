@@ -3,7 +3,8 @@ function bindEvent(options) {
   if (element) {
     element.addEventListener(options.eventName || "click", function (ev) {
       if (typeof options.func === "function") {
-        options.func.call(options.context || window, ev, options);
+        const context = options.context || element;
+        options.func.call(context, ev, options);
       }
     });
   }

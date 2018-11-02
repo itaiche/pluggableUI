@@ -49,33 +49,36 @@
   function _buildDOM() {
     if (window.templates.keys) {
       randomizer.generate();
+      const lpHost = encodeURIComponent(`${location.protocol}//${location.hostname}${location.port ? ':' + location.port : ''}`);
+      childFrames.push(addIFrame(`children/cow.html?lpHost=${lpHost}`,
+        {
+          position: "fixed",
+          top: "10px",
+          right: "5px",
+          height: "81px"
+        }));
 
-      childFrames.push(addIFrame("children/cow.html?lpHost=" + encodeURIComponent(`${location.protocol}//${location.hostname}`), {
-        position: "fixed",
-        top: "10px",
-        right: "5px",
-        height: "81px"
-      }));
+      childFrames.push(addIFrame(`children/sheep.html?lpHost=${lpHost}`,
+        {
+          position: "fixed",
+          bottom: "10px",
+          right: "5px",
+          height: "117px"
+        }));
 
-      childFrames.push(addIFrame("children/sheep.html?lpHost=" + encodeURIComponent(`${location.protocol}//${location.hostname}`), {
-        position: "fixed",
-        bottom: "10px",
-        right: "5px",
-        height: "117px"
-      }));
-
-      childFrames.push(addIFrame("children/crab.html?lpHost=" + encodeURIComponent(`${location.protocol}//${location.hostname}`), {
-        position: "fixed",
-        bottom: "10px",
-        left: "5px",
-        height: "95px"
-      }));
+      childFrames.push(addIFrame(`children/crab.html?lpHost=${lpHost}`,
+        {
+          position: "fixed",
+          bottom: "10px",
+          left: "5px",
+          height: "95px"
+        }));
 
       while (childFrames.length > 0) {
         couriers.push(new Chronos.PostMessageCourier({
           eventChannel: channels,
           target: childFrames.shift(),
-          targetOrigin: `${location.protocol}//${location.hostname}`
+          targetOrigin: `${location.protocol}//${location.hostname}${location.port ? ':' + location.port : ''}`
         }));
       }
     } else {

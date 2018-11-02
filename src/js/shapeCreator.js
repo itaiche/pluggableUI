@@ -1,6 +1,6 @@
 (function () {
 
-  let shapeCount = 400;
+  let shapeCount;
   let rotateClasses = ["", "rotate7", "rotate15", "rotate30", "rotate50", "rotate70", "rotate100", "rotate125", "rotate147", "rotate159", "rotate175"];
   let viewPort = {
     height: Window.innerHeight,
@@ -10,6 +10,8 @@
     height: window.screen.height !== window.screen.availHeight ? window.screen.availHeight : window.screen.availHeight,
     width: window.innerWidth
   };
+  const factor = deviceScreen.height > deviceScreen.width ? deviceScreen.height : deviceScreen.width;
+  shapeCount = Math.floor(factor / 5);
 
   function createElements(count) {
     for (let i = 0; i < (count || shapeCount); i++) {
@@ -25,7 +27,7 @@
           top: top + "px",
           left: left + "px",
         },
-        child:{
+        child: {
           backgroundColor: window.generateColor(true),
           borderColor: window.generateColor()
         },
