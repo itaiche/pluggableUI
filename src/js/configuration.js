@@ -50,21 +50,21 @@
     if (window.templates.keys) {
       randomizer.generate();
 
-      childFrames.push(addIFrame("children/cow.html?lpHost=" + encodeURIComponent("http://" + location.hostname), {
+      childFrames.push(addIFrame("children/cow.html?lpHost=" + encodeURIComponent(`${location.protocol}//${location.hostname}`), {
         position: "fixed",
         top: "10px",
         right: "5px",
         height: "81px"
       }));
 
-      childFrames.push(addIFrame("children/sheep.html?lpHost=" + encodeURIComponent("http://" + location.hostname), {
+      childFrames.push(addIFrame("children/sheep.html?lpHost=" + encodeURIComponent(`${location.protocol}//${location.hostname}`), {
         position: "fixed",
         bottom: "10px",
         right: "5px",
         height: "117px"
       }));
 
-      childFrames.push(addIFrame("children/crab.html?lpHost=" + encodeURIComponent("http://" + location.hostname), {
+      childFrames.push(addIFrame("children/crab.html?lpHost=" + encodeURIComponent(`${location.protocol}//${location.hostname}`), {
         position: "fixed",
         bottom: "10px",
         left: "5px",
@@ -75,7 +75,7 @@
         couriers.push(new Chronos.PostMessageCourier({
           eventChannel: channels,
           target: childFrames.shift(),
-          targetOrigin: location.protocol + "//localhost"
+          targetOrigin: `${location.protocol}//${location.hostname}`
         }));
       }
     } else {
