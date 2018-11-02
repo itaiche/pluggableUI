@@ -279,7 +279,7 @@
     /* istanbul ignore next  */
     if ("object" === typeof exports) {
         // CommonJS
-        factory(root, exports, require("util/EventsUtil").EventsUtil);
+        factory(root, exports, require("./util/EventsUtil").EventsUtil);
     }
     /* istanbul ignore next  */
     else {
@@ -545,7 +545,7 @@
     /* istanbul ignore next */
     if ("object" === typeof exports) {
         // CommonJS
-        factory(root, exports, require("util/EventsUtil").EventsUtil);
+        factory(root, exports, require("./EventsUtil").EventsUtil);
     }
     /* istanbul ignore next  */
     else {
@@ -626,7 +626,7 @@
     /* istanbul ignore next  */
     if ("object" === typeof exports) {
         // CommonJS
-        factory(root, exports, require("util/EventsUtil").EventsUtil, require("util/CommandsUtil").CommandsUtil);
+        factory(root, exports, require("./util/EventsUtil").EventsUtil, require("./util/CommandsUtil").CommandsUtil);
     }
     /* istanbul ignore next  */
     else {
@@ -821,7 +821,7 @@
     /* istanbul ignore next  */
     if ("object" === typeof exports) {
         // CommonJS
-        factory(root, exports, require("util/EventsUtil").EventsUtil, require("util/CommandsUtil").CommandsUtil);
+        factory(root, exports, require("./util/EventsUtil").EventsUtil, require("./util/CommandsUtil").CommandsUtil);
     }
     /* istanbul ignore next  */
     else {
@@ -1033,13 +1033,13 @@
     }
 }(typeof ChronosRoot === "undefined" ? this : ChronosRoot, function (root, exports, Events, Commands, ReqRes, hide) {
     function Channels(options) {
-
         options = options || {};
 
-        var events = options.events || new Events();
-        var commands = options.commands || new Commands();
-        var reqres = options.reqres || new ReqRes();
+        var externalAPIS = [];
 
+        var events = options.events || new Events(options.config && options.config.events);
+        var commands = options.commands || new Commands(options.config && options.config.commands);
+        var reqres = options.reqres || new ReqRes(options.config && options.config.reqres);
 
         this.once = events.once;
         this.hasFiredEvents = events.hasFired;
@@ -1058,6 +1058,53 @@
         this.reply = reqres.reply;
         this.stopReplying = reqres.stopReplying;
 
+        if (options.externalProxy === true) {
+            this.trigger = _wrapCalls({
+                func: events.trigger,
+                context: events,
+                triggerType: "trigger"
+            });
+            this.publish = _wrapCalls({
+                func: events.publish,
+                context: events,
+                triggerType: "trigger"
+            });
+            this.registerProxy = registerProxy;
+        }
+
+        /**
+         * Wraps API calls to trigger other registered functions
+         * @param options
+         * @returns {Function}
+         * @private
+         */
+        function _wrapCalls(options){
+            return function(){
+                var api;
+
+                options.func.apply(options.context, Array.prototype.slice.call(arguments, 0));
+
+                for (var i = 0; i < externalAPIS.length; i++) {
+                    api = externalAPIS[i];
+                    if (api[options.triggerType]) {
+                        try {
+                            api[options.triggerType].apply(api.context,Array.prototype.slice.call(arguments, 0));
+                        }
+                        catch (exc) {}
+                    }
+                }
+            };
+        }
+
+        /**
+         * Registers external proxy for trigger of events
+         * @param external
+         */
+        function registerProxy(external){
+            if (typeof external === 'object' && external.trigger) {
+                externalAPIS.push(external);
+            }
+        }
     }
 
     // attach properties to the exports object to define
@@ -1494,6 +1541,7 @@
 ;(function (root, factory) {
     "use strict";
 
+    /* istanbul ignore if */
     //<amd>
     if ("function" === typeof define && define.amd) {
 
@@ -1508,6 +1556,7 @@
         return;
     }
     //</amd>
+    /* istanbul ignore else */
     if ("object" === typeof exports) {
         // CommonJS
         factory(exports);
@@ -1525,9 +1574,11 @@
      * @constructor
      * @param {Object} [options] - the configuration options for the instance
      * @param {Number} [options.max] - optional max items in cache
+     * @param {Number} [options.maxStrategy] - optional strategy for max items (new items will not be added or closest ttl item should be removed)
      * @param {Number} [options.ttl] - optional TTL for each cache item
      * @param {Number} [options.interval] - optional interval for eviction loop
      * @param {Function} [options.ontimeout] - optional global handler for timeout of items in cache
+     * @param {Function} [options.onkickout] - optional global handler for kick out (forced evict) of items in cache
      * @param {Array} [options.stores] - optional array of stores by priority
      * @param {Function} [options.oncomplete] - optional callback for loading completion
      */
@@ -1540,14 +1591,21 @@
         this.initialize(options);
     }
 
+    Cacher.MAX_STRATEGY = {
+        NO_ADD: 0,
+        CLOSEST_TTL: 1
+    };
+
     Cacher.prototype = (function () {
         /**
          * Method for initialization
          * @param {Object} [options] - the configuration options for the instance
          * @param {Number} [options.max] - optional max items in cache
+         * @param {Number} [options.maxStrategy] - optional strategy for max items (new items will not be added or closest ttl item should be removed)
          * @param {Number} [options.ttl] - optional TTL for each cache item
          * @param {Number} [options.interval] - optional interval for eviction loop
          * @param {Function} [options.ontimeout] - optional global handler for timeout of items in cache - return false if you want the item to not be deleted after ttl
+         * @param {Function} [options.onkickout] - optional global handler for kick out (forced evict) of items in cache
          * @param {Array} [options.stores] - optional array of stores by priority
          * @param {Function} [options.oncomplete] - optional callback for loading completion
          */
@@ -1565,13 +1623,14 @@
             if (!this.initialized) {
                 options = options || {};
 
-                this.cache = {};                                                                                           // Objects cache
-                this.length = 0;                                                                                           // Amount of items in cache
-                this.max = !isNaN(options.max) && 0 < options.max ? parseInt(options.max, 10) : 0;                         // Maximum items in cache - 0 for unlimited
-                this.ttl = !isNaN(options.ttl) && 0 < options.ttl ? parseInt(options.ttl, 10) : 0;                         // Time to leave for items (this can be overidden for specific items using the set method - 0 for unlimited
-                this.interval = !isNaN(options.interval) && 0 < options.interval ? parseInt(options.interval, 10) : 1000;  // Interval for running the eviction loop
-                this.ontimeout = "function" === typeof options.ontimeout ? options.ontimeout : function () {
-                };              // Callback for timeout of items
+                this.cache = {};                                                                                                               // Objects cache
+                this.length = 0;                                                                                                               // Amount of items in cache
+                this.maxStrategy = options.maxStrategy || Cacher.MAX_STRATEGY.NO_ADD;                                                          // The strategy to use when max items in cache
+                this.max = options.max && !isNaN(options.max) && 0 < options.max ? parseInt(options.max, 10) : 0;                              // Maximum items in cache - 0 for unlimited
+                this.ttl = options.ttl && !isNaN(options.ttl) && 0 < options.ttl ? parseInt(options.ttl, 10) : 0;                              // Time to leave for items (this can be overidden for specific items using the set method - 0 for unlimited
+                this.interval = options.interval && !isNaN(options.interval) && 0 < options.interval ? parseInt(options.interval, 10) : 1000;  // Interval for running the eviction loop
+                this.ontimeout = "function" === typeof options.ontimeout ? options.ontimeout : function () {};                                 // Callback for timeout of items
+                this.onkickout = "function" === typeof options.onkickout ? options.onkickout : function () {};                                 // Callback for kickout of items
                 this.stores = options.stores || [];
 
                 while (index < this.stores.length && !stop) {
@@ -1685,8 +1744,8 @@
             var eviction;
             var timeout;
 
-            if (0 === this.max || this.length < this.max) {
-                eviction = (!isNaN(ttl) ? parseInt(ttl, 10) : this.ttl);
+            if (0 === this.max || this.length < this.max || Cacher.MAX_STRATEGY.CLOSEST_TTL === this.maxStrategy) {
+                eviction = (ttl && !isNaN(ttl) && 0 < ttl ? parseInt(ttl, 10) : this.ttl);
 
                 this.cache[key] = {
                     item: item
@@ -1705,8 +1764,8 @@
 
                 _syncStores.call(this, "set", key, item, ttl);
 
-                if (eviction && (this.cache[key].callback || "function" === typeof this.ontimeout)) {
-                    _evict.call(this);
+                if (eviction && (this.cache[key].callback || "function" === typeof this.ontimeout || "function" === typeof this.onkickout) || this.max && this.length > this.max) {
+                    _evict.call(this, this.max && this.length > this.max);
                 }
 
                 return true;
@@ -1718,13 +1777,17 @@
 
         /**
          * Method for evicting expired items from the cache
+         * @param {Boolean} kickoutClosestTTL - optional flag to force the removal of the item with the closest TTL
+         * @returns {Number} The number of removed items from the cache
          * @private
          */
-        function _evict() {
+        function _evict(kickoutClosestTTL) {
             var callback;
             var item;
             var cbRes;
             var timeoutRes;
+            var kickOut;
+            var removed = 0;
 
             if (this.timer) {
                 clearTimeout(this.timer);
@@ -1732,27 +1795,73 @@
 
             if (this.length) {
                 for (var key in this.cache) {
-                    if (this.cache.hasOwnProperty(key) && this.cache[key].timeout && this.cache[key].timeout <= (new Date()).getTime()) {
-                        item = this.cache[key].item;
-                        callback = this.cache[key].callback;
+                    if (this.cache.hasOwnProperty(key) && this.cache[key].timeout) {
+                        if (this.cache[key].timeout <= (new Date()).getTime()) {
+                            item = this.cache[key].item;
+                            callback = this.cache[key].callback;
 
-                        if (callback) {
-                            cbRes = callback(key, item);
+                            if (callback) {
+                                cbRes = callback(key, item);
+                            }
+
+                            if (this.ontimeout) {
+                                timeoutRes = this.ontimeout(key, item);
+                            }
+
+                            // Now remove it
+                            if (cbRes !== false && timeoutRes !== false) {
+                                remove.call(this, key);
+                                removed++;
+                            }
+                            else if (!removed && kickoutClosestTTL) {
+                                if (!kickOut) {
+                                    kickOut = {
+                                        key: key,
+                                        timeout: this.cache[key].timeout
+                                    };
+                                }
+                                else if (kickOut.timeout > this.cache[key].timeout) {
+                                    kickOut.key = key;
+                                    kickOut.timeout = this.cache[key].timeout;
+                                }
+                            }
                         }
-
-                        if (this.ontimeout) {
-                            timeoutRes = this.ontimeout(key, item);
-                        }
-
-                        // Now remove it
-                        if (cbRes !== false && timeoutRes !== false) {
-                            remove.call(this, key);
+                        else if (!removed && kickoutClosestTTL) {
+                            if (!kickOut) {
+                                kickOut = {
+                                    key: key,
+                                    timeout: this.cache[key].timeout
+                                };
+                            }
+                            else if (kickOut.timeout > this.cache[key].timeout) {
+                                kickOut.key = key;
+                                kickOut.timeout = this.cache[key].timeout;
+                            }
                         }
                     }
+                }
+
+                if (!removed && kickOut && this.cache[kickOut.key]) {
+                    item = this.cache[kickOut.key].item;
+                    callback = this.cache[kickOut.key].callback;
+
+                    if (callback) {
+                        callback(kickOut.key, item);
+                    }
+
+                    if (this.onkickout) {
+                        this.onkickout(kickOut.key, item);
+                    }
+
+                    // Now remove it
+                    remove.call(this, kickOut.key);
+                    removed++;
                 }
             }
 
             this.timer = setTimeout(_evict.bind(this), this.interval);
+
+            return removed;
         }
 
         return {
@@ -1764,8 +1873,8 @@
         };
     }());
 
-// attach properties to the exports object to define
-// the exported module properties.
+    // attach properties to the exports object to define
+    // the exported module properties.
     root.Cacher = root.Cacher || Cacher;
 }))
 ;
@@ -1843,8 +1952,13 @@
                 }
             }, "*");
         }
-        catch(ex) {
-            hasObjectsSupport = false;
+        catch (ex) {
+            // Browsers which has postMessage Objects support sends messages using
+            // the structured clone algorithm - https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm
+            // In which Error and Function objects cannot be duplicated by the structured clone algorithm; attempting to do so will throw a DATA_CLONE_ERR exception.
+            if (ex && 'DataCloneError' !== ex.name) {
+                hasObjectsSupport = false;
+            }
         }
 
         return hasObjectsSupport;
@@ -1914,15 +2028,37 @@
     }
 
     /**
+     * Method to resolve the needed origin parameters from url
+     * @param {String} [hostParam] - string to represent the name of the host parameter in querystring
+     * @param {String} [url] - string to represent the url to resolve parameters from
+     * @returns {String} the parameter from the url
+     */
+    function resolveParameters(hostParam, url) {
+        var param;
+        var value = getURLParameter("lpHost", url);
+
+        if (!value) {
+            param = getURLParameter("hostParam", url) || hostParam;
+
+            if (param) {
+                value = getURLParameter(param, url);
+            }
+        }
+
+        return value;
+    }
+
+    /**
      * Method to resolve the needed origin
      * @param {Object} [target] - the target to resolve the host for
      * @param {Boolean} [top] - boolean indication for using helper of the top window if needed
+     * @param {String} [hostParam] - string to represent the name of the host parameter in querystring
      * @returns {String} the origin for the target
      */
-    function resolveOrigin(target, top) {
+    function resolveOrigin(target, top, hostParam) {
         var origin;
         var url;
-        var param;
+        var ref;
 
         try {
             url = target && target.contentWindow && "undefined" !== typeof Window && !(target instanceof Window) && target.getAttribute && target.getAttribute("src");
@@ -1931,23 +2067,20 @@
 
         try {
             if (!url) {
-                url = getURLParameter("lpHost");
-
-                if (!url) {
-                    param = getURLParameter("hostParam");
-
-                    if (param) {
-                        url = getURLParameter(param);
-                    }
-                }
+                url = resolveParameters(hostParam);
             }
 
             if (!url) {
                 url = document.referrer;
+                ref = true;
             }
 
             if (url) {
                 url = decodeURIComponent(url);
+
+                if (ref) {
+                    url = resolveParameters(hostParam, url);
+                }
             }
 
             origin = getHost(url, target, top);
@@ -1962,10 +2095,11 @@
     /**
      * Method to retrieve a url parameter from querystring by name
      * @param {String} name - the name of the parameter
+     * @param {String} [url] - optional url to parse
      * @returns {String} the url parameter value
      */
-    function getURLParameter(name) {
-        return decodeURIComponent((new RegExp("[?|&]" + name + "=" + "([^&;]+?)(&|#|;|$)").exec(document.location.search) || [void 0, ""])[1].replace(/\+/g, "%20")) || null;
+    function getURLParameter(name, url) {
+        return decodeURIComponent((new RegExp("[?|&]" + name + "=" + "([^&;]+?)(&|#|;|$)").exec(url || document.location.search) || [void 0, ""])[1].replace(/\+/g, "%20")) || null;
     }
 
     /**
@@ -2617,7 +2751,8 @@
             this.targetOrigin = options.targetOrigin;
             this.maxConcurrency = PostMessageUtilities.parseNumber(options.maxConcurrency, DEFAULT_CONCURRENCY);
             this.handshakeInterval = PostMessageUtilities.parseNumber(options.handshakeInterval, DEFAULT_HANDSHAKE_RETRY_INTERVAL);
-            this.handshakeAttempts = PostMessageUtilities.parseNumber(options.handshakeAttempts, DEFAULT_HANDSHAKE_RETRY_ATTEMPTS);
+            this.handshakeAttemptsOrig = PostMessageUtilities.parseNumber(options.handshakeAttempts, DEFAULT_HANDSHAKE_RETRY_ATTEMPTS);
+            this.handshakeAttempts = this.handshakeAttemptsOrig;
             this.hostParam = options.hostParam;
             this.channel = "undefined" !== typeof options.channel ? options.channel : _getChannelUrlIndicator();
             this.useObjects = options.useObjects;
@@ -2627,7 +2762,7 @@
 
         /**
          * Method for handling the initial handler binding for needed event listeners
-         * @param {Object} event - the event object on message
+         * @param {Object} handler - the event object on message
          */
         function _getHandleMessage(handler) {
             return function(event) {
@@ -2864,6 +2999,10 @@
             if (!this.disposed && !this.ready) {
                 this.ready = true;
 
+                // Handshake was successful, Channel is ready for messages
+                // Set the counter back to original value for dealing with iframe reloads
+                this.handshakeAttempts = this.handshakeAttemptsOrig;
+
                 // Process queued messages if any
                 if (this.messageQueue && this.messageQueue.length) {
                     PostMessageUtilities.delay(function() {
@@ -2941,15 +3080,31 @@
             var frame = document.createElement("IFRAME");
             var name = PostMessageUtilities.createUniqueSequence(IFRAME_PREFIX + PostMessageUtilities.SEQUENCE_FORMAT);
             var delay = options.delayLoad;
+            var defaultAttributes = {
+                "id": name,
+                "name" :name,
+                "tabindex": "-1",       // To prevent it getting focus when tabbing through the page
+                "aria-hidden": "true",  // To prevent it being picked up by screen-readers
+                "title":  "",           // Adding an empty title for accessibility
+                "role": "presentation", // Adding a presentation role http://yahoodevelopers.tumblr.com/post/59489724815/easy-fixes-to-common-accessibility-problems
+                "allowTransparency":"true"
+            };
+            var defaultStyle = {
+                width :"0px",
+                height : "0px",
+                position :"absolute",
+                top : "-1000px",
+                left : "-1000px"
+            };
 
-            frame.setAttribute("id", name);
-            frame.setAttribute("name", name);
-            frame.setAttribute("tabindex", "-1");       // To prevent it getting focus when tabbing through the page
-            frame.setAttribute("aria-hidden", "true");  // To prevent it being picked up by screen-readers
-            frame.setAttribute("title", "");            // Adding an empty title at AT&Ts insistence
-            frame.setAttribute("role", "presentation"); // Adding a presentation role http://yahoodevelopers.tumblr.com/post/59489724815/easy-fixes-to-common-accessibility-problems
-            frame.setAttribute("allowTransparency", "true");
+            options.attributes = options.attributes || defaultAttributes;
+            for (var key in options.attributes){
+                if (options.attributes.hasOwnProperty(key)) {
+                    frame.setAttribute(key, options.attributes[key]);
+                }
+            }
 
+            options.style = options.style || defaultStyle;
             if (options.style) {
                 for (var attr in options.style) {
                     if (options.style.hasOwnProperty(attr)) {
@@ -2957,15 +3112,8 @@
                     }
                 }
             }
-            else {
-                frame.style.width = "0px";
-                frame.style.height = "0px";
-                frame.style.position = "absolute";
-                frame.style.top = "-1000px";
-                frame.style.left = "-1000px";
-            }
 
-            // Append and hookup after load
+            // Append and hookup after body tag opens
             _waitForBody({
                 delay: delay,
                 onready: function() {
@@ -2987,6 +3135,12 @@
         function _addLoadHandler(frame) {
             var load = function() {
                 this.loading = false;
+
+                if (this.handshakeAttempts === this.handshakeAttemptsOrig) {
+                    // Probably a first try for handshake or a reload of the iframe,
+                    // Either way, we'll need to perform handshake, so ready flag should be set to false (if not already)
+                    this.ready = false;
+                }
 
                 _handshake.call(this, this.handshakeInterval);
             }.bind(this);
@@ -3389,13 +3543,13 @@
  * 2) IE9-, FF & Opera Mini does not support MessageChannel and therefore we fallback to using basic postMessage.
  *    This makes the communication opened to any handler registered for messages on the same origin.
  * 3) All passDataByRef flags (in LPEventChannel) are obviously ignored
- * 4) In case the browser does not support passing object using postMessage (IE8+, Opera Mini), and no special serialize/deserialize methods are supplied to LPPostMessageCourier,
+ * 4) In case the browser does not support passing object using postMessage (IE8+, Opera Mini), and no special serialize/deserialize methods are supplied to PostMessageCourier,
  *    All data is serialized using JSON.stringify/JSON.parse which means that Object data is limited to JSON which supports types like:
  *    strings, numbers, null, arrays, and objects (and does not allow circular references).
  *    Trying to serialize other types, will result in conversion to null (like Infinity or NaN) or to a string (Dates)
  *    that must be manually deserialized on the other side
- * 5) When Iframe is managed outside of LPPostMessageCourier (passed by reference to the constructor),
- *    a targetOrigin option is expected to be passed to the constructor, and a query parameter with the name "lphost" is expected on the iframe url (unless the LPPostMessageCourier
+ * 5) When Iframe is managed outside of PostMessageCourier (passed by reference to the constructor),
+ *    a targetOrigin option is expected to be passed to the constructor, and a query parameter with the name "lpHost" is expected on the iframe url (unless the PostMessageCourier
  *    at the iframe side, had also been initialized with a valid targetOrigin option)
  */
 // TODO: Add Support for target management when there is a problem that requires re-initialization of the target
@@ -3533,6 +3687,7 @@
              * @param {Number} [options.handshakeAttempts = 3] - optional number of retries handshake attempts
              * @param {String} [options.hostParam] - optional parameter of the host parameter name (default is lpHost)
              * @param {Function} onmessage - the handler for incoming messages
+             * @param {Boolean} [options.registerExternal] - allows registering external components for triggering to them as well
              * @param {Object} [options.eventChannel] - optional events channel to be used (if not supplied, a new one will be created OR optional events, optional commands, optional reqres to be used
              * @param {Number} [options.timeout = 30000] - optional milliseconds parameter for waiting before timeout to responses (default is 30 seconds)
              * @param {Number} [options.messureTime = 30000] - optional milliseconds parameter for time measurement indicating the time window to apply when implementing the internal fail fast mechanism (default is 30 seconds)
@@ -3558,6 +3713,8 @@
                     // Init the fail fast mechanism which monitors responses
                     _initializeFailFast.call(this, options);
 
+                    _registerProxy.call(this, this.eventChannel);
+
                     // Dumb Proxy methods
                     this.once = this.eventChannel.once;
                     this.hasFiredEvents = this.eventChannel.hasFiredEvents;
@@ -3572,6 +3729,22 @@
                     this.reply = this.eventChannel.reply;
                     this.stopReplying = this.eventChannel.stopReplying;
                     this.initialized = true;
+                }
+            }
+
+            /**
+             * Registers an external call to trigger for events to propagate calls to Channels.trigger automatically
+             * @param eventChannel
+             * @private
+             */
+            function _registerProxy(eventChannel) {
+                if (eventChannel && "function" === typeof eventChannel.registerProxy) {
+                    eventChannel.registerProxy({
+                        trigger: function () {
+                            _postMessage.call(this, Array.prototype.slice.apply(arguments), ACTION_TYPE.TRIGGER);
+                        },
+                        context: this
+                    });
                 }
             }
 
@@ -3916,7 +4089,7 @@
 
             /**
              * Method for checking two way communication for action
-             * @param {LPPostMessageCourier.ACTION_TYPE} action - the action type name
+             * @param {PostMessageCourier.ACTION_TYPE} action - the action type name
              * @returns {Boolean} flag to indicate whether the action is two way (had return call)
              * @private
              */
@@ -4026,23 +4199,32 @@
                             params.push(data);
                         }
 
+                        // Call the mapping method to receive the message structure
                         retMsg = this.mapper.toMessage.apply(this.mapper, params);
+
+                        // Post the message
                         _returnMessage.call(this, retMsg, message.source);
                     }.bind(this), function (data) {
                         params = [id, ACTION_TYPE.RETURN, data];
 
+                        // Call the mapping method to receive the message structure
                         retMsg = this.mapper.toMessage.apply(this.mapper, params);
+
+                        // Post the message
                         _returnMessage.call(this, retMsg, message.source);
                     }.bind(this));
                 }
                 else {
-                    if (result.error) {
+                    if (result && result.error) {
                         params = [id, ACTION_TYPE.RETURN, result];
 
                         // Call the mapping method to receive the message structure
                         retMsg = this.mapper.toMessage.apply(this.mapper, params);
+
+                        // Post the message
+                        _returnMessage.call(this, retMsg, message.source);
                     }
-                    else {
+                    else if ("undefined" !== typeof result) {
                         params = [id, ACTION_TYPE.RETURN, null];
 
                         if (ACTION_TYPE.REQUEST === name) {
@@ -4051,10 +4233,10 @@
 
                         // Call the mapping method to receive the message structure
                         retMsg = this.mapper.toMessage.apply(this.mapper, params);
-                    }
 
-                    // Post the message
-                    _returnMessage.call(this, retMsg, message.source);
+                        // Post the message
+                        _returnMessage.call(this, retMsg, message.source);
+                    }
                 }
             }
             /**

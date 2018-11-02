@@ -1,12 +1,12 @@
 {
   "name": "pluggableUI",
   "version": "0.0.1",
-  "author" : "itai.che@gmail.com",
-  "keywords": [""],
+  "author": "itai.che@gmail.com",
+  "keywords": [
+    ""
+  ],
   "dependencies": {
-      "chronosjs" : "0.0.20"
+    "chronosjs": "latest"
   },
-  "engines": {
-
-  }
+  "engines": {}
 }
