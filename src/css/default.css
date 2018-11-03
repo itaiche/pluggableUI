@@ -6,8 +6,9 @@
     text-align: center;
 }
 
-
 html {
+    height: 100%;
+    width: 100%;
     background-color: black;
     overflow: hidden;
 }
@@ -41,49 +42,59 @@ iframe {
 }
 
 #owlImg {
-    width: 500px;
-    top:40px;
+    width: 40%;
+    top: 5%;
     position: fixed;
-    right:50%;
-    margin-right:-250px;
+    right: 50%;
+    margin-right: calc(40% / 2 * -1);
+}
+
+@media (max-width : 500px) {
+    #owlImg {
+        width: calc(75% - 10px);
+        top: 5%;
+        position: fixed;
+        right: 50%;
+        margin-right: calc(calc(75% - 10px) / 2 * -1);
+    }
 }
 
 .rotate7 {
-    transform:rotate(7deg);
+    transform: rotate(7deg);
 }
 
 .rotate15 {
-    transform:rotate(15deg);
+    transform: rotate(15deg);
 }
 
 .rotate30 {
-    transform:rotate(30deg);
+    transform: rotate(30deg);
 }
 
 .rotate50 {
-    transform:rotate(50deg);
+    transform: rotate(50deg);
 }
 
 .rotate70 {
-    transform:rotate(70deg);
+    transform: rotate(70deg);
 }
 
 .rotate100 {
-    transform:rotate(100deg);
+    transform: rotate(100deg);
 }
 
 .rotate125 {
-    transform:rotate(125deg);
+    transform: rotate(125deg);
 }
 
 .rotate147 {
-    transform:rotate(147deg);
+    transform: rotate(147deg);
 }
 
 .rotate159 {
-    transform:rotate(159deg);
+    transform: rotate(159deg);
 }
 
 .rotate175 {
-    transform:rotate(175deg);
+    transform: rotate(175deg);
 }

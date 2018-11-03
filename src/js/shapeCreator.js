@@ -6,17 +6,20 @@
     height: Window.innerHeight,
     width: window.innerWidth
   };
-  let deviceScreen = {
+  let deviceScreen = generateLimitedWidth({
     height: window.screen.height !== window.screen.availHeight ? window.screen.availHeight : window.screen.availHeight,
-    width: window.innerWidth
-  };
+    width: window.innerWidth || viewPort.width
+  });
+
+
+
   const factor = deviceScreen.height > deviceScreen.width ? deviceScreen.height : deviceScreen.width;
   shapeCount = Math.floor(factor / 5);
 
   function createElements(count) {
     for (let i = 0; i < (count || shapeCount); i++) {
       let type = getRandomFromArray(templates.keys);
-      let left = Math.floor((viewPort.width || deviceScreen.width) * Math.random());
+      let left = Math.floor((deviceScreen.width) * Math.random());
       left = left < 0 ? 0 : left;
       let top = Math.floor((viewPort.height || deviceScreen.height) * Math.random());
 
@@ -34,6 +37,11 @@
         className: getRandomFromArray(rotateClasses)
       }));
     }
+  }
+
+  function generateLimitedWidth(viewPort){
+      viewPort.width = viewPort.width - 100;
+      return viewPort;
   }
 
   window.randomizer = {

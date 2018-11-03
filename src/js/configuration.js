@@ -13,20 +13,22 @@
 
       bindEvent({
         element: "#btnAnimateIt",
-        func: function () {
-          animate();
-        }
+        func: animate
       });
 
+      const insane = document.getElementById('insane');
       bindEvent({
-        element: "#insane",
-        func: () => {
-          window.state.insane = !window.state.insane;
-          animateConstantly();
-        }
+        element: insane,
+        func: animateWrapper.bind(insane)
       });
     }
   });
+
+  function animateWrapper(){
+    window.state.insane = !window.state.insane;
+    this.innerHTML = window.state.insane ? 'STOP IT!!!' : 'Animate stuff INSANELY';
+    animateConstantly();
+  }
 
   function animate() {
     const elementsSelection = ["iframe", "img"].concat(templates.keys).concat(randomizer.rotationClasses.slice(1));
